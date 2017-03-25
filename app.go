@@ -1,12 +1,12 @@
 package main
 
 import (
-	Alsa "github.com/cocoonlife/goalsa"	
+	"github.com/cocoonlife/goalsa"
+	"fmt"
+	"flag"
+	"github.com/simonassank/aubio-go"
+	"github.com/simonassank/go_ws2811"
 )
-import "fmt"
-import "flag"
-import "github.com/simonassank/aubio-go"
-import "C"
 
 var (
 	srcPath    = flag.String("src", "", "Path to source file. Required")
@@ -21,18 +21,39 @@ var (
 
 
 func main() {
-	// Alsa
-	c, err := Alsa.NewCaptureDevice("plughw:CARD=Set,DEV=0",
-		 2, Alsa.FormatFloat64LE, 44100, Alsa.BufferParams{})
-	p, err := Alsa.NewPlaybackDevice("plughw:CARD=Set,DEV=0",
-		 2, Alsa.FormatFloat64LE, 44100, Alsa.BufferParams{})
+
+	ws2811.Init(18, 144, 255)
+	ws2811.SetLed(0, uint32(234542))
+	ws2811.Render()
+
+	c, _ := alsa.NewCaptureDevice(
+		"plughw:CARD=Set,DEV=0",
+		 2,
+		 alsa.FormatFloat64LE,
+		 *Samplerate,
+		 alsa.BufferParams{},
+	)
+
+	p, _ := alsa.NewPlaybackDevice(
+		"plughw:CARD=Set,DEV=0",
+		 2,
+		 alsa.FormatFloat64LE,
+		 *Samplerate,
+		 alsa.BufferParams{},
+	)
 	
-	fmt.Println(c)
-	fmt.Println(err)
-	
-	pitch := aubio.NewPitch(aubio.PitchDefault, uint(*Bufsize), uint(*Blocksize), uint(*Samplerate))
+	pitch := aubio.NewPitch(
+		aubio.PitchDefault,
+		uint(*Bufsize),
+		uint(*Blocksize),
+		uint(*Samplerate),
+	)
 	pitch.SetUnit(aubio.PitchOutFreq)
 	pitch.SetTolerance(0.7)
+
+	phVoc, _ := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
+	fb := aubio.NewFilterBank(40, uint(*Bufsize))
+	fb.SetMelCoeffsSlaney(uint(*Samplerate))
 
 	b4 := make([]float64, 256)
 
@@ -41,13 +62,21 @@ func main() {
 		p.Write(b4)
 
 		go func() {
-			buffer := aubio.NewSimpleBufferData(256, b4)
-			pitch.Do(buffer)
-			pitch_val := pitch.Buffer().Slice()[0]
-			buffer.Free()
-			fmt.Println(pitch_val)
+			// sBuffer := aubio.NewSimpleBufferData(256, b4)
+			// pitch.Do(sBuffer)
+			// pitch_val := pitch.Buffer().Slice()[0]
+			// sBuffer.Free()
+			// fmt.Println(pitch_val)
+			inputBuffer := aubio.NewSimpleBufferData(256, b4)
+			phVoc.Do(inputBuffer)
+			fftgrain := phVoc.Grain()
+			fb.Do(fftgrain)
+			energies := fb.Buffer().Slice()
+			
+			fmt.Println(energies)
 		}()
 	}
 }
+
 
 
