@@ -6,6 +6,7 @@ import (
 	"flag"
 	"github.com/simonassank/aubio-go"
 	"github.com/simonassank/go_ws2811"
+	"math"
 )
 
 var (
@@ -21,10 +22,9 @@ var (
 
 
 func main() {
+	fmt.Println("Go!")
 
 	ws2811.Init(18, 144, 255)
-	ws2811.SetLed(0, uint32(234542))
-	ws2811.Render()
 
 	c, _ := alsa.NewCaptureDevice(
 		"plughw:CARD=Set,DEV=0",
@@ -55,28 +55,81 @@ func main() {
 	fb := aubio.NewFilterBank(40, uint(*Bufsize))
 	fb.SetMelCoeffsSlaney(uint(*Samplerate))
 
-	b4 := make([]float64, 256)
+	b4 := make([]float64, 512)
+
+	calc_outs := 0
+	audio_outs := 0
+
+	_ = phVoc
+	_ = calc_outs
+	
+	go func() {
+		var (
+			ratio float64
+			energies []float64
+			fftgrain *aubio.ComplexBuffer
+			inputBuffer *aubio.SimpleBuffer
+			led_index int
+			led_colors = make([]uint32, 144)
+		)
+		
+		for {
+			inputBuffer = aubio.NewSimpleBufferData(512, b4)
+			pitch.Do(inputBuffer)
+			_ = pitch.Buffer().Slice()[0]
+
+			phVoc.Do(inputBuffer)
+			fftgrain = phVoc.Grain()
+			fb.Do(fftgrain)
+			energies = fb.Buffer().Slice()
+
+			for led_index = 0; led_index < 144; led_index++ {
+				ratio = energies[int(Round(float64(led_index)/3.6))]
+				// ratio = math.Pow(ratio, 1.5)
+				ratio = ratio * 30.0
+				// ratio = math.Pow(ratio, 1.5)
+				// fmt.Println(ratio)
+				if ratio > 1 {
+					ratio = 1
+				}
+
+				led_colors[led_index] = AvgColor(int(led_colors[led_index]), int(GetColor(ratio)))
+				led_colors[led_index] = AvgColor(int(led_colors[led_index]), 0)
+			}
+			ws2811.SetBitmap(led_colors)
+			ws2811.Render()
+		}
+	}()
 
 	for {
-		c.Read(b4)
-		p.Write(b4)
-
-		go func() {
-			// sBuffer := aubio.NewSimpleBufferData(256, b4)
-			// pitch.Do(sBuffer)
-			// pitch_val := pitch.Buffer().Slice()[0]
-			// sBuffer.Free()
-			// fmt.Println(pitch_val)
-			inputBuffer := aubio.NewSimpleBufferData(256, b4)
-			phVoc.Do(inputBuffer)
-			fftgrain := phVoc.Grain()
-			fb.Do(fftgrain)
-			energies := fb.Buffer().Slice()
-			
-			fmt.Println(energies)
-		}()
+		_, _ = c.Read(b4)
+		_, _ = p.Write(b4)
+		audio_outs += 1
 	}
 }
 
+func GetColor(ratio float64) uint32 {
+	num := uint32(255*ratio)
+	return (num << 16)+(num << 8)+num
+}
 
+func Round(f float64) float64 {
+    return math.Floor(f + .5)
+}
+
+func AvgColor(a int, b int) uint32{
+	return uint32(float64(GetRed(a)+GetRed(b)) / 2.0 + float64(GetGreen(a)+GetGreen(b)) / 2.0 + float64(GetBlue(a)+GetBlue(b)) / 2)
+}
+
+func GetRed(color int) int {
+	return color & 0xFF0000 >> 16
+}
+
+func GetBlue(color int) int {
+	return color & 0xFF00 >> 8
+}
+
+func GetGreen(color int) int {
+	return color & 0xFF
+}
 
