@@ -46,13 +46,14 @@ var (
 
 // Non final vars
 var (
-ratio float64
-energies []float64
-fftgrain *aubio.ComplexBuffer
-inputBuffer *aubio.SimpleBuffer
-led_index int
-led_colors = make([]uint32, LedCount)
-buff = make([]float64, int(*Bufsize))
+	ratio float64
+	energies []float64
+	fftgrain *aubio.ComplexBuffer
+	inputBuffer *aubio.SimpleBuffer
+	led_index int
+	led_colors = make([]uint32, LedCount)
+	buff = make([]float64, int(*Bufsize))
+	eq = make([]int, LedCount)
 )
 
 var (
@@ -61,7 +62,7 @@ var (
 	pre_power = 1.15
 	multi = 1.0
 	post_power = 1.0
-	tint_alpha = 0.6
+	tint_alpha = 0.5
 	fade_ratio = 0.05
 	tint_color = int(0x00ff77)
 )
@@ -72,14 +73,14 @@ func main() {
 	ws2811.Init(18, LedCount, 255)
 
 	c, errC := alsa.NewCaptureDevice(
-		"plughw:CARD=Set,DEV=0",
-		 1,
+		"plughw:CARD=Device,DEV=0",
+		 2,
 		 alsa.FormatFloat64LE,
 		 *Samplerate,
 		 alsa.BufferParams{
 			*Samplerate,
-			8,
-			8,
+			1,
+			1,
 		 },
 	)
 
@@ -87,14 +88,14 @@ func main() {
 
 
 	p, errP := alsa.NewPlaybackDevice(
-		"plughw:CARD=Set,DEV=0",
-		 1,
+		"plughw:CARD=Device,DEV=0",
+		 2,
 		 alsa.FormatFloat64LE,
 		 *Samplerate,
 		 alsa.BufferParams{
 			*Samplerate,
-			8,
-			8,
+			1,
+			1,
 		 },
 	)
 
@@ -134,42 +135,6 @@ func main() {
 
 	ui.Init()
 
-	// Prepower ++
-	ui.Handle("/sys/kbd/1", func(e ui.Event) {
-		pre_power += 0.05
-		PrintConf()
-	})
-
-	// Prepower --
-	ui.Handle("/sys/kbd/2", func(e ui.Event) {
-		pre_power -= 0.05
-		PrintConf()
-	})
-
-	// Multi ++
-	ui.Handle("/sys/kbd/3", func(e ui.Event) {
-		multi += 0.05
-		PrintConf()
-	})
-
-	// Multi --
-	ui.Handle("/sys/kbd/4", func(e ui.Event) {
-		multi -= 0.05
-		PrintConf()
-	})
-
-	// Post ++
-	ui.Handle("/sys/kbd/6", func(e ui.Event) {
-		post_power += 0.05
-		PrintConf()
-	})
-
-	// Post --
-	ui.Handle("/sys/kbd/7", func(e ui.Event) {
-		post_power -= 0.05
-		PrintConf()
-	})
-
 	go func() {
 		for {
 			start := time.Now()
@@ -203,6 +168,7 @@ func main() {
 				}
 
 				inv_led_index := (channel_led_count)-led_index
+				eq[inv_led_index] = int(ratio * 100)
 
 				tinted := AvgColor(int(color), tint_color, tint_alpha)
 				led_colors[inv_led_index] = AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
@@ -221,17 +187,36 @@ func main() {
 				} else if (ratio < min_level) {
 					ratio = 0
 				}
-				
+				eq[led_index] = int(ratio * 100)
+
 				tinted := AvgColor(int(color), tint_color, tint_alpha)
 				led_colors[led_index] = AvgColor(int(led_colors[led_index]), int(tinted), ratio)
 				led_colors[led_index] = AvgColor(int(led_colors[led_index]), 0, fade_ratio)
 				ws2811.SetLed(led_index, led_colors[led_index])
 			}
-			
+
 			// fmt.Println(led_colors)
 			ws2811.Render()
 			_ = start
 			// fmt.Println(time.Since(start))
+		}
+	}()
+
+	go func() {
+		for {
+			spl0 := ui.NewSparkline()
+			spl0.Data = eq
+			spl0.Title = "Eq"
+			spl0.Height = 10
+			spl0.LineColor = ui.ColorMagenta
+			
+			// single
+			spls0 := ui.NewSparklines(spl0)
+			spls0.Height = 30
+			spls0.Width = 144
+			spls0.Border = true
+
+			ui.Render(spls0)
 		}
 	}()
 
