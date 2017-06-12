@@ -8,7 +8,9 @@ import (
 	"github.com/simonassank/go_ws2811"
 	"math"
 	"time"
-	ui "github.com/gizak/termui"
+	"io/ioutil"
+	"encoding/json"
+	// ui "github.com/gizak/termui"
 )
 
 // Configs
@@ -22,6 +24,7 @@ var (
 	Verbose    = flag.Bool("verbose", false, "Print verbose output")
 	help       = flag.Bool("help", false, "Print this help")
 	LedCount   = 144
+	ConfigsFileName = "./configs.txt"
 )
 
 // Final vars
@@ -54,15 +57,28 @@ var (
 	led_colors = make([]uint32, LedCount)
 	buff = make([]float64, int(*Bufsize))
 	eq = make([]int, LedCount)
+	tinted uint32
+	inv_led_index int
 )
+
+type SettingsObject struct {
+	max_level float32 `json:"max_level"`
+	min_level float32 `json:"min_level"`
+	pre_power float32 `json:"pre_power"`
+	multi float32 `json:"multi"`
+	post_power float32 `json:"post_power"`
+	tint_alpha float32 `json:"tint_alpha"`
+	fade_ratio float32 `json:"fade_ratio"`
+	tint_color string `json:"tint_color"`
+}
 
 var (
 	max_level = 0.95
 	min_level = 0.0
-	pre_power = 1.15
-	multi = 1.0
+	pre_power = 1.0 // 1.15
+	multi = 1.125
 	post_power = 1.0
-	tint_alpha = 0.5
+	tint_alpha = 0.125 // 0.5
 	fade_ratio = 0.05
 	tint_color = int(0x00ff77)
 )
@@ -133,11 +149,9 @@ func main() {
 		}	
 	}()
 
-	ui.Init()
-
 	go func() {
 		for {
-			start := time.Now()
+			// start := time.Now()
 			inputBuffer = aubio.NewSimpleBufferData(uint(*Bufsize), buff)
 			pitch.Do(inputBuffer)
 			pitch_val := pitch.Buffer().Slice()[0]
@@ -170,7 +184,7 @@ func main() {
 				inv_led_index := (channel_led_count)-led_index
 				eq[inv_led_index] = int(ratio * 100)
 
-				tinted := AvgColor(int(color), tint_color, tint_alpha)
+				tinted = AvgColor(int(color), tint_color, tint_alpha)
 				led_colors[inv_led_index] = AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
 				led_colors[inv_led_index] = AvgColor(int(led_colors[inv_led_index]), 0, fade_ratio)
 				ws2811.SetLed(inv_led_index, led_colors[inv_led_index])
@@ -189,7 +203,7 @@ func main() {
 				}
 				eq[led_index] = int(ratio * 100)
 
-				tinted := AvgColor(int(color), tint_color, tint_alpha)
+				tinted = AvgColor(int(color), tint_color, tint_alpha)
 				led_colors[led_index] = AvgColor(int(led_colors[led_index]), int(tinted), ratio)
 				led_colors[led_index] = AvgColor(int(led_colors[led_index]), 0, fade_ratio)
 				ws2811.SetLed(led_index, led_colors[led_index])
@@ -197,34 +211,52 @@ func main() {
 
 			// fmt.Println(led_colors)
 			ws2811.Render()
-			_ = start
+			// _ = start
 			// fmt.Println(time.Since(start))
 		}
 	}()
 
 	go func() {
 		for {
-			spl0 := ui.NewSparkline()
-			spl0.Data = eq
-			spl0.Title = "Eq"
-			spl0.Height = 10
-			spl0.LineColor = ui.ColorMagenta
-			
-			// single
-			spls0 := ui.NewSparklines(spl0)
-			spls0.Height = 30
-			spls0.Width = 144
-			spls0.Border = true
-
-			ui.Render(spls0)
+			file, e := ioutil.ReadFile(ConfigsFileName)
+			if e != nil {
+			    fmt.Printf("File error: %v\n", e)
+			}
+			var jsontype SettingsObject
+			err := json.Unmarshal(file, &jsontype)
+			fmt.Printf("File: %s, Data: %s Err: %s\n", file, jsontype.max_level, err)
+			time.Sleep(100)
 		}
 	}()
+	
+	for {
+		time.Sleep(100)
+	}
 
-	ui.Handle("/sys/kbd/C-c", func(ui.Event) {
-		ui.StopLoop()
-	})
+	// ui.Init()
+	// go func() {
+	// 	for {
+	// 		spl0 := ui.NewSparkline()
+	// 		spl0.Data = eq
+	// 		spl0.Title = "Eq"
+	// 		spl0.Height = 10
+	// 		spl0.LineColor = ui.ColorMagenta
 
-	ui.Loop()
+	// 		// single
+	// 		spls0 := ui.NewSparklines(spl0)
+	// 		spls0.Height = 30
+	// 		spls0.Width = 144
+	// 		spls0.Border = true
+
+	// 		ui.Render(spls0)
+	// 	}
+	// }()
+
+	// ui.Handle("/sys/kbd/C-c", func(ui.Event) {
+	// 	ui.StopLoop()
+	// })
+
+	// ui.Loop()
 }
 
 func GetColor(ratio float64) uint32 {
@@ -269,13 +301,4 @@ func GetNoteIndex(freqHz float64) float64 {
 	rem := h - float64(int(h))
 	n := int(h) % 12.0
 	return float64(n)+rem
-}
-
-func PrintConf() {
-	fmt.Println(max_level)
-	fmt.Println(pre_power)
-	fmt.Println(multi)
-	fmt.Println(post_power)
-	fmt.Println(tint_alpha)
-	fmt.Println(fade_ratio)
 }
