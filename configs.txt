@@ -6,5 +6,19 @@
     "post_power": 1.0,
     "tint_alpha": 0.125,
     "fade_ratio": 0.05,
-    "tint_color": "00ff77"
+    "tint_color": "00ff77",
+    "note_colors": [
+        "FF0000",
+        "FF0000",
+        "FFFF00",
+        "FFFF00",
+        "C3F2FF",
+        "7F8BFD",
+        "7F8BFD",
+        "F37900",
+        "F37900",
+        "33CC33",
+        "33CC33",
+        "8EC9FF"
+    ]
 }
