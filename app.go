@@ -90,10 +90,10 @@ func main() {
 
 	c, errC := alsa.NewCaptureDevice(
 		"plughw:CARD=Device,DEV=0",
-		 2,
-		 alsa.FormatFloat64LE,
-		 *Samplerate,
-		 alsa.BufferParams{
+		2,
+		alsa.FormatFloat64LE,
+		*Samplerate,
+		alsa.BufferParams{
 			*Samplerate,
 			1,
 			1,
@@ -105,14 +105,14 @@ func main() {
 
 	p, errP := alsa.NewPlaybackDevice(
 		"plughw:CARD=Device,DEV=0",
-		 2,
-		 alsa.FormatFloat64LE,
-		 *Samplerate,
-		 alsa.BufferParams{
+		2,
+		alsa.FormatFloat64LE,
+		*Samplerate,
+		alsa.BufferParams{
 			*Samplerate,
 			1,
 			1,
-		 },
+		},
 	)
 
 	fmt.Println(errP)
