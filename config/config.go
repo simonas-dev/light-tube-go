@@ -3,6 +3,7 @@ package config
 import (
     "io/ioutil"
     "encoding/json"
+    "strconv"
 )
 
 var (
@@ -38,28 +39,27 @@ func Load() Config {
     file, _ := ioutil.ReadFile(CONFIG_FILE_NAME)
     var jsonData ConfigJSON
     _ = json.Unmarshal([]byte(file), &jsonData)
-    config = Config {
-        Max_level = jsonData.Max_level,
-        Min_level = jsonData.Min_level,
-        Pre_power = jsonData.Pre_power,
-        Multi = jsonData.Multi,
-        Post_power = jsonData.Post_power,
-        Tint_alpha = jsonData.Tint_alpha,
-        Fade_ratio = jsonData.Fade_ratio,
-        Tint_color = hexStrToInt(jsonData.Tint_color)
-        Note_Colors = hexStrArrToIntArr(jsonData.Note_Colors)
-    }
+    config := Config {
+        Max_level: jsonData.Max_level,
+        Min_level: jsonData.Min_level,
+        Pre_power: jsonData.Pre_power,
+        Multi: jsonData.Multi,
+        Post_power: jsonData.Post_power,
+        Tint_alpha: jsonData.Tint_alpha,
+        Fade_ratio: jsonData.Fade_ratio,
+        Tint_color: hexStrToInt(jsonData.Tint_color),
+        Note_Colors: hexStrArrToIntArr(jsonData.Note_Colors)}
     return config
 }
 
 func hexStrToInt(hex string) uint32 {
-    num, _ := strconv.ParseInt(hex, 16, 32)
-    return num
+    num, _ := strconv.ParseUint(hex, 16, 32)
+    return uint32(num)
 }
 
-func hexStrArrToIntArr(hexArr []string) uint32[] {
-    var numArr [len(hexArr)]uint32
-    for i := 0; i < len(hexArr); i++ {
+func hexStrArrToIntArr(hexArr []string) []uint32 {
+    numArr := make([]uint32, 12)
+    for i := 0; i < 12; i++ {
         numArr[i] = hexStrToInt(hexArr[i])
     }
     return numArr
