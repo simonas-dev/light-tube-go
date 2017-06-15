@@ -1,7 +1,7 @@
 package main
 
 import (
-    _"fmt"
+    _ "fmt"
     "github.com/simonassank/go_ws2811"
 )
 

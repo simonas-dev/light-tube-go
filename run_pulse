@@ -1,2 +1,0 @@
-#!/bin/bash
-go build app_pulse.go && sudo ./app_pulse

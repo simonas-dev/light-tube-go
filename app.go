@@ -10,7 +10,8 @@ import (
 	"time"
 	"io/ioutil"
 	"encoding/json"
-	// ui "github.com/gizak/termui"
+	"./config"
+	"./utils"
 )
 
 // Configs
@@ -24,7 +25,6 @@ var (
 	Verbose    = flag.Bool("verbose", false, "Print verbose output")
 	help       = flag.Bool("help", false, "Print this help")
 	LedCount   = 144
-	ConfigsFileName = "./configs.txt"
 )
 
 // Final vars
@@ -60,17 +60,6 @@ var (
 	tinted uint32
 	inv_led_index int
 )
-
-type SettingsObject struct {
-	max_level float32 `json:"max_level"`
-	min_level float32 `json:"min_level"`
-	pre_power float32 `json:"pre_power"`
-	multi float32 `json:"multi"`
-	post_power float32 `json:"post_power"`
-	tint_alpha float32 `json:"tint_alpha"`
-	fade_ratio float32 `json:"fade_ratio"`
-	tint_color string `json:"tint_color"`
-}
 
 var (
 	max_level = 0.95
@@ -151,7 +140,6 @@ func main() {
 
 	go func() {
 		for {
-			// start := time.Now()
 			inputBuffer = aubio.NewSimpleBufferData(uint(*Bufsize), buff)
 			pitch.Do(inputBuffer)
 			pitch_val := pitch.Buffer().Slice()[0]
@@ -209,10 +197,7 @@ func main() {
 				ws2811.SetLed(led_index, led_colors[led_index])
 			}
 
-			// fmt.Println(led_colors)
 			ws2811.Render()
-			// _ = start
-			// fmt.Println(time.Since(start))
 		}
 	}()
 
@@ -232,73 +217,4 @@ func main() {
 	for {
 		time.Sleep(100)
 	}
-
-	// ui.Init()
-	// go func() {
-	// 	for {
-	// 		spl0 := ui.NewSparkline()
-	// 		spl0.Data = eq
-	// 		spl0.Title = "Eq"
-	// 		spl0.Height = 10
-	// 		spl0.LineColor = ui.ColorMagenta
-
-	// 		// single
-	// 		spls0 := ui.NewSparklines(spl0)
-	// 		spls0.Height = 30
-	// 		spls0.Width = 144
-	// 		spls0.Border = true
-
-	// 		ui.Render(spls0)
-	// 	}
-	// }()
-
-	// ui.Handle("/sys/kbd/C-c", func(ui.Event) {
-	// 	ui.StopLoop()
-	// })
-
-	// ui.Loop()
-}
-
-func GetColor(ratio float64) uint32 {
-	num := uint32(255*ratio)
-	return (num << 16)+(num << 8)+num
-}
-
-func Round(f float64) float64 {
-	return math.Floor(f + .5)
-}
-
-func GetEnergy(arr []float64, f_index float64) float64 {
-	index := int(f_index)
-	ratio := f_index - float64(index)
-	return arr[index] * (1-ratio) + arr[index+1] * ratio
-}
-
-func GetFloatColor(arr []uint32, f_index float64) uint32 {
-	index := int(f_index)
-	if len(arr)-1 == index {
-		return arr[index]
-	}
-	ratio := f_index - float64(index)
-	return AvgColor(int(arr[index]), int(arr[index+1]), ratio)
-}
-
-func AvgColor(a int, b int, ratio float64) uint32{
-	inv_ratio := 1-ratio
-	c_a := GetColorNum(a)
-	c_b := GetColorNum(b)
-	return uint32(int((c_a[0]*inv_ratio)+(c_b[0]*ratio)) << 16 + int((c_a[1]*inv_ratio)+(c_b[1]*ratio)) << 8 + int((c_a[2]*inv_ratio)+(c_b[2]*ratio)))
-}
-
-func GetColorNum(color int) []float64 {
-	return []float64{float64(color & 0xFF0000 >> 16), float64(color & 0xFF00 >> 8), float64(color & 0xFF)}
-}
-
-func GetNoteIndex(freqHz float64) float64 {
-	div := freqHz/C0
-	if div == 0 { return 0 }
-	h := 12 * math.Log2(div)
-	rem := h - float64(int(h))
-	n := int(h) % 12.0
-	return float64(n)+rem
 }
