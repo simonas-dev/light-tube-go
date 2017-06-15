@@ -8,8 +8,6 @@ import (
 	"github.com/simonassank/go_ws2811"
 	"math"
 	"time"
-	"io/ioutil"
-	"encoding/json"
 	"./config"
 	"./utils"
 )
@@ -141,7 +139,7 @@ func main() {
 			inputBuffer = aubio.NewSimpleBufferData(uint(*Bufsize), buff)
 			pitch.Do(inputBuffer)
 			pitch_val := pitch.Buffer().Slice()[0]
-			color := GetFloatColor(colors, GetNoteIndex(pitch_val))
+			color := utils.GetFloatColor(colors, utils.GetNoteIndex(pitch_val))
 
 			phVoc.Do(inputBuffer)
 			fftgrain = phVoc.Grain()
@@ -157,7 +155,7 @@ func main() {
 
 			// Channel 1
 			for led_index = channel_1_start; led_index < channel_1_end; led_index++ {
-				ratio = GetEnergy(energies, float64(led_index)/led_divider)
+				ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
 				ratio = math.Pow(ratio, pre_power)
 				ratio *= multi
 				ratio = math.Pow(ratio, post_power)
@@ -170,15 +168,15 @@ func main() {
 				inv_led_index := (channel_led_count)-led_index
 				eq[inv_led_index] = int(ratio * 100)
 
-				tinted = AvgColor(int(color), tint_color, tint_alpha)
-				led_colors[inv_led_index] = AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
-				led_colors[inv_led_index] = AvgColor(int(led_colors[inv_led_index]), 0, fade_ratio)
+				tinted = utils.AvgColor(int(color), tint_color, tint_alpha)
+				led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
+				led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, fade_ratio)
 				ws2811.SetLed(inv_led_index, led_colors[inv_led_index])
 			}
 
 			// Channel 2
 			for led_index = channel_2_start; led_index < channel_2_end; led_index++ {
-				ratio = GetEnergy(energies, float64(led_index-channel_2_start)/led_divider)
+				ratio = utils.GetEnergy(energies, float64(led_index-channel_2_start)/led_divider)
 				ratio = math.Pow(ratio, pre_power)
 				ratio *= multi
 				ratio = math.Pow(ratio, post_power)
@@ -189,9 +187,9 @@ func main() {
 				}
 				eq[led_index] = int(ratio * 100)
 
-				tinted = AvgColor(int(color), tint_color, tint_alpha)
-				led_colors[led_index] = AvgColor(int(led_colors[led_index]), int(tinted), ratio)
-				led_colors[led_index] = AvgColor(int(led_colors[led_index]), 0, fade_ratio)
+				tinted = utils.AvgColor(int(color), tint_color, tint_alpha)
+				led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(tinted), ratio)
+				led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, fade_ratio)
 				ws2811.SetLed(led_index, led_colors[led_index])
 			}
 
@@ -201,14 +199,8 @@ func main() {
 
 	go func() {
 		for {
-			file, e := ioutil.ReadFile(ConfigsFileName)
-			if e != nil {
-			    fmt.Printf("File error: %v\n", e)
-			}
-			var jsontype SettingsObject
-			err := json.Unmarshal(file, &jsontype)
-			fmt.Printf("File: %s, Data: %s Err: %s\n", file, jsontype.max_level, err)
-			time.Sleep(100)
+			var conf = config.Load()
+			fmt.Printf("%s\n", conf)
 		}
 	}()
 	
