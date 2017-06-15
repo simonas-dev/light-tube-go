@@ -1,2 +1,2 @@
 #!/bin/bash
-go build app.go -o ./bin/app && sudo ./bin/app
+go build -o ./bin/app app.go && sudo ./bin/app
