@@ -29,8 +29,6 @@ var (
 
 // Final vars
 var (
-	A4 = 440.0
-	C0 = A4 * math.Pow(2, -4.75)
 	colors = []uint32 {
 		uint32(0xFF0000),
 		uint32(0xFF0000),

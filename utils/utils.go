@@ -2,6 +2,11 @@ package utils
 
 import "math"
 
+var (
+    A4 = 440.0
+    C0 = A4 * math.Pow(2, -4.75)
+)
+
 func GetColor(ratio float64) uint32 {
     num := uint32(255*ratio)
     return (num << 16)+(num << 8)+num
