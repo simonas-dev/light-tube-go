@@ -4,9 +4,9 @@
     "pre_power": 1.0,
     "multi": 1.5,
     "post_power": 1.0,
-    "tint_alpha": 0.125,
+    "tint_alpha": 0.5,
     "fade_ratio": 0.05,
-    "tint_color": "00ff77",
+    "tint_color": "ff0000",
     "note_colors": [
         "FF0000",
         "FF0000",

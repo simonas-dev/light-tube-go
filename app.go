@@ -55,17 +55,7 @@ var (
 	eq = make([]int, LedCount)
 	tinted uint32
 	inv_led_index int
-)
-
-var (
-	max_level = 0.95
-	min_level = 0.0
-	pre_power = 1.0 // 1.15
-	multi = 1.125
-	post_power = 1.0
-	tint_alpha = 0.125 // 0.5
-	fade_ratio = 0.05
-	tint_color = int(0x00ff77)
+	configData config.Config
 )
 
 func main() {
@@ -156,40 +146,40 @@ func main() {
 			// Channel 1
 			for led_index = channel_1_start; led_index < channel_1_end; led_index++ {
 				ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
-				ratio = math.Pow(ratio, pre_power)
-				ratio *= multi
-				ratio = math.Pow(ratio, post_power)
-				if ratio > max_level {
-					ratio = max_level
-				} else if (ratio < min_level) {
+				ratio = math.Pow(ratio, configData.Pre_power)
+				ratio *= configData.Multi
+				ratio = math.Pow(ratio, configData.Post_power)
+				if ratio > configData.Max_level {
+					ratio = configData.Max_level
+				} else if (ratio < configData.Min_level) {
 					ratio = 0
 				}
 
 				inv_led_index := (channel_led_count)-led_index
 				eq[inv_led_index] = int(ratio * 100)
 
-				tinted = utils.AvgColor(int(color), tint_color, tint_alpha)
+				tinted = utils.AvgColor(int(color), int(configData.Tint_color), configData.Tint_alpha)
 				led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
-				led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, fade_ratio)
+				led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, configData.Fade_ratio)
 				ws2811.SetLed(inv_led_index, led_colors[inv_led_index])
 			}
 
 			// Channel 2
 			for led_index = channel_2_start; led_index < channel_2_end; led_index++ {
 				ratio = utils.GetEnergy(energies, float64(led_index-channel_2_start)/led_divider)
-				ratio = math.Pow(ratio, pre_power)
-				ratio *= multi
-				ratio = math.Pow(ratio, post_power)
-				if ratio > max_level {
-					ratio = max_level
-				} else if (ratio < min_level) {
+				ratio = math.Pow(ratio, configData.Pre_power)
+				ratio *= configData.Multi
+				ratio = math.Pow(ratio, configData.Post_power)
+				if ratio > configData.Max_level {
+					ratio = configData.Max_level
+				} else if (ratio < configData.Min_level) {
 					ratio = 0
 				}
 				eq[led_index] = int(ratio * 100)
 
-				tinted = utils.AvgColor(int(color), tint_color, tint_alpha)
+				tinted = utils.AvgColor(int(color), int(configData.Tint_color), configData.Tint_alpha)
 				led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(tinted), ratio)
-				led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, fade_ratio)
+				led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, configData.Fade_ratio)
 				ws2811.SetLed(led_index, led_colors[led_index])
 			}
 
@@ -199,8 +189,11 @@ func main() {
 
 	go func() {
 		for {
-			var conf = config.Load()
-			fmt.Printf("%s\n", conf)
+			newConfig, err := config.Load()
+			if (err == nil) {
+				configData = newConfig
+			}
+			time.Sleep(1000)
 		}
 	}()
 	
