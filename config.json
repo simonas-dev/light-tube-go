@@ -1,0 +1,24 @@
+{
+    "max_level": 0.7,
+    "min_level": 0.0,
+    "pre_power": 1.0,
+    "multi": 1.0,
+    "post_power": 1.0,
+    "tint_alpha": 0.0,
+    "fade_ratio": 0.05, 
+    "tint_color": "00ff00",
+    "note_colors": [
+        "FF0000",
+        "FF7F00",
+        "FFFF00",
+        "7FFF00",
+        "00FF00",
+        "00FF7F",
+        "00FFFF",
+        "007FFF",
+        "0000FF",
+        "7F00FF",
+        "FF00FF",
+        "FF007F"
+    ]
+}

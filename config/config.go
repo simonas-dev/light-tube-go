@@ -4,12 +4,11 @@ import (
     "io/ioutil"
     "encoding/json"
     "strconv"
-    "fmt"
     "errors"
 )
 
 var (
-    CONFIG_FILE_NAME = "./configs.txt"
+    CONFIG_FILE_NAME = "./config.json"
 )
 
 
@@ -42,7 +41,7 @@ func Load() (Config, error) {
     var jsonData ConfigJSON
     var config Config
     json.Unmarshal([]byte(file), &jsonData)
-    fmt.Println(jsonData)
+    
     if (len(jsonData.Note_Colors) > 0) {
         config = Config {
             Max_level: jsonData.Max_level,

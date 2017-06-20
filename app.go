@@ -143,6 +143,8 @@ func main() {
 			channel_2_start := channel_led_count
 			channel_2_end := LedCount-1
 
+			fmt.Println(energies)
+
 			// Channel 1
 			for led_index = channel_1_start; led_index < channel_1_end; led_index++ {
 				ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
