@@ -1,0 +1,31 @@
+# Original
+"note_colors": [
+    "FF0000",
+    "FF5500",
+    "FF9900",
+    "FFFF00",
+    "C3F2FF",
+    "7F8BFD",
+    "7F8BFD",
+    "F37900",
+    "F37900",
+    "33CC33",
+    "33CC33",
+    "8EC9FF"
+]
+
+# 12 major colors
+"note_colors": [
+    "FF0000",
+    "FF7F00",
+    "FFFF00",
+    "7FFF00",
+    "00FF00",
+    "00FF7F",
+    "00FFFF",
+    "007FFF",
+    "0000FF",
+    "7F00FF",
+    "FF00FF",
+    "FF007F"
+]
