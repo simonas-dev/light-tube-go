@@ -25,24 +25,6 @@ var (
 	LedCount   = 144
 )
 
-// Final vars
-var (
-	colors = []uint32 {
-		uint32(0xFF0000),
-		uint32(0xFF0000),
-		uint32(0xFFFF00),
-		uint32(0xFFFF00),
-		uint32(0xC3F2FF),
-		uint32(0x7F8BFD),
-		uint32(0x7F8BFD),
-		uint32(0xF37900),
-		uint32(0xF37900),
-		uint32(0x33CC33),
-		uint32(0x33CC33),
-		uint32(0x8EC9FF),
-	}
-)
-
 // Non final vars
 var (
 	ratio float64
@@ -106,17 +88,6 @@ func main() {
 	fb := aubio.NewFilterBank(40, uint(*Bufsize))
 	fb.SetMelCoeffsSlaney(uint(*Samplerate))
 
-	_ = phVoc
-
-
-	_ = ratio
-	_ = energies
-	_ = fftgrain
-	_ = inputBuffer
-	_ = led_index
-	_ = led_colors
-	_ = buff
-
 	go func() {
 		for {
 			c.Read(buff)
@@ -129,7 +100,7 @@ func main() {
 			inputBuffer = aubio.NewSimpleBufferData(uint(*Bufsize), buff)
 			pitch.Do(inputBuffer)
 			pitch_val := pitch.Buffer().Slice()[0]
-			color := utils.GetFloatColor(colors, utils.GetNoteIndex(pitch_val))
+			color := utils.GetFloatColor(configData.Note_Colors, utils.GetNoteIndex(pitch_val))
 
 			phVoc.Do(inputBuffer)
 			fftgrain = phVoc.Grain()
