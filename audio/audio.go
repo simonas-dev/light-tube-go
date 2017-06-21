@@ -51,7 +51,7 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
 	return c, p
 }
 
-func GetEnergies(buffer []float64) []float64 {
+func GetAnalaysis(buffer []float64) ([]float64, uint32) {
 	pitch := aubio.NewPitch(
 		aubio.PitchDefault,
 		uint(*Bufsize),
@@ -68,10 +68,9 @@ func GetEnergies(buffer []float64) []float64 {
 	inputBuffer := aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
 	pitch.Do(inputBuffer)
 	pitch_val := pitch.Buffer().Slice()[0]
-	color := utils.GetFloatColor(configData.Note_Colors, utils.GetNoteIndex(pitch_val))
 
 	phVoc.Do(inputBuffer)
 	fftgrain := phVoc.Grain()
 	fb.Do(fftgrain)
-	return fb.Buffer().Slice()
+	return fb.Buffer().Slice(), pitch_val
 }

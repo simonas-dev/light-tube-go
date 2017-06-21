@@ -39,7 +39,9 @@ func main() {
 
 	go func() {
 		for {
-			energies := audio.GetEnergies(buff)
+			energies, pitch_val := audio.GetEnergies(buff)
+
+			color := utils.GetFloatColor(configData.Note_Colors, utils.GetNoteIndex(pitch_val))
 
 			channel_led_count := LedCount/2
 			led_divider := float64(channel_led_count)/40.0
