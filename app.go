@@ -10,25 +10,12 @@ import (
 	"time"
 	"./config"
 	"./utils"
-)
-
-// Configs
-var (
-	srcPath    = flag.String("src", "", "Path to source file. Required")
-	Samplerate = flag.Int("samplerate", 44100, "Sample rate to use for the audio file")
-	Blocksize  = flag.Int("blocksize", 512, "Blocksize use for the audio file")
-	Bufsize    = flag.Int("bufsize", 1024, "Bufsize use for the audio file")
-	Silence    = flag.Float64("silence", -90.0, "Threshold to use when detecting silence")
-	Threshold  = flag.Float64("threshold", 0.0, "Detection threshold")
-	Verbose    = flag.Bool("verbose", false, "Print verbose output")
-	help       = flag.Bool("help", false, "Print this help")
-	LedCount   = 144
+	"./audio"
 )
 
 // Non final vars
 var (
 	ratio float64
-	energies []float64
 	fftgrain *aubio.ComplexBuffer
 	inputBuffer *aubio.SimpleBuffer
 	led_index int
@@ -45,48 +32,7 @@ func main() {
 
 	ws2811.Init(18, LedCount, 255)
 
-	c, errC := alsa.NewCaptureDevice(
-		"plughw:CARD=Device,DEV=0",
-		2,
-		alsa.FormatFloat64LE,
-		*Samplerate,
-		alsa.BufferParams{
-			*Samplerate,
-			1,
-			1,
-		 },
-	)
-
-	fmt.Println(errC)
-
-
-	p, errP := alsa.NewPlaybackDevice(
-		"plughw:CARD=Device,DEV=0",
-		2,
-		alsa.FormatFloat64LE,
-		*Samplerate,
-		alsa.BufferParams{
-			*Samplerate,
-			1,
-			1,
-		},
-	)
-
-	fmt.Println(errP)
-
-
-	pitch := aubio.NewPitch(
-		aubio.PitchDefault,
-		uint(*Bufsize),
-		uint(*Blocksize),
-		uint(*Samplerate),
-	)
-	pitch.SetUnit(aubio.PitchOutFreq)
-	pitch.SetTolerance(0.7)
-
-	phVoc, _ := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
-	fb := aubio.NewFilterBank(40, uint(*Bufsize))
-	fb.SetMelCoeffsSlaney(uint(*Samplerate))
+	c, p := audio.NewAudio()
 
 	go func() {
 		for {
@@ -97,15 +43,7 @@ func main() {
 
 	go func() {
 		for {
-			inputBuffer = aubio.NewSimpleBufferData(uint(*Bufsize), buff)
-			pitch.Do(inputBuffer)
-			pitch_val := pitch.Buffer().Slice()[0]
-			color := utils.GetFloatColor(configData.Note_Colors, utils.GetNoteIndex(pitch_val))
-
-			phVoc.Do(inputBuffer)
-			fftgrain = phVoc.Grain()
-			fb.Do(fftgrain)
-			energies = fb.Buffer().Slice()
+			energies := audio.GetEnergies(buff)
 
 			channel_led_count := LedCount/2
 			led_divider := float64(channel_led_count)/40.0
