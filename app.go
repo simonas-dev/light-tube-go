@@ -1,10 +1,8 @@
 package main
 
 import (
-	"github.com/cocoonlife/goalsa"
 	"fmt"
 	"flag"
-	"github.com/simonassank/aubio-go"
 	"github.com/simonassank/go_ws2811"
 	"math"
 	"time"
@@ -16,8 +14,6 @@ import (
 // Non final vars
 var (
 	ratio float64
-	fftgrain *aubio.ComplexBuffer
-	inputBuffer *aubio.SimpleBuffer
 	led_index int
 	led_colors = make([]uint32, LedCount)
 	buff = make([]float64, int(*Bufsize))
