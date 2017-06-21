@@ -51,7 +51,7 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
 	return c, p
 }
 
-func GetAnalaysis(buffer []float64) ([]float64, uint32) {
+func GetAnalaysis(buffer []float64) ([]float64, float64) {
 	pitch := aubio.NewPitch(
 		aubio.PitchDefault,
 		uint(*Bufsize),
