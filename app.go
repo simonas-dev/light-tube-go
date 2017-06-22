@@ -15,18 +15,18 @@ var (
     ratio           float64
     led_index       int
     tinted          uint32
-    inv_led_index   int
-    configData      config.Config
-    led_colors      = make([]uint32, LedCount)
+    config_data     config.Config
+    led_colors      = make([]uint32, led_count)
     buff            = make([]float64, int(1024))
-    eq              = make([]int, LedCount)
-    LedCount        = 144
+    avg_bpm         = 110.0 // Default average
+    eq              = make([]int, led_count)
+    led_count       = 144
 )
 
 func main() {
     fmt.Println("Go!")
 
-    ws2811.Init(18, LedCount, 255)
+    ws2811.Init(18, led_count, 255)
 
     c, p := audio.NewAudio()
 
@@ -36,65 +36,70 @@ func main() {
             p.Write(buff)
         }
     }()
+    
+    go func() {
+        for {
+            bpm, conv := audio.GetBpm()
+            fmt.Println(bpm)
+            fmt.Println(conv)
+            fmt.Println()
+            time.Sleep(30 * time.Second)
+        }
+    }()
 
     go func() {
         var (
-            channel_led_count = LedCount/2
+            channel_led_count       = led_count/2
             led_divider             = float64(channel_led_count)/40.0
             channel_1_start         = 0
             channel_1_end           = channel_led_count
             channel_2_start         = channel_led_count
-            channel_2_end           = LedCount-1
-            energies                = make([]float64, int(40))
-            pitch_val               float64
-            color                   uint32
-            inv_led_index           int
+            channel_2_end           = led_count-1
         )
 
         for {
-            energies, pitch_val = audio.GetAnalaysis(buff)
-
-            color = utils.GetFloatColor(configData.Note_Colors, utils.GetNoteIndex(pitch_val))
-
-            fmt.Println(energies)
+            energies := audio.GetMelEnergies(buff)
+            pitch_val := audio.GetPitchVal(buff)
+            audio.PushBpm(buff)
+            color := utils.GetFloatColor(config_data.Note_Colors, utils.GetNoteIndex(pitch_val))
 
             // Channel 1
-            for led_index = channel_1_start; led_index < channel_1_end; led_index++ {
+            for led_index := channel_1_start; led_index < channel_1_end; led_index++ {
                 ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
-                ratio = math.Pow(ratio, configData.Pre_power)
-                ratio *= configData.Multi
-                ratio = math.Pow(ratio, configData.Post_power)
-                if ratio > configData.Max_level {
-                    ratio = configData.Max_level
-                } else if (ratio < configData.Min_level) {
+                ratio = math.Pow(ratio, config_data.Pre_power)
+                ratio *= config_data.Multi
+                ratio = math.Pow(ratio, config_data.Post_power)
+                if ratio > config_data.Max_level {
+                    ratio = config_data.Max_level
+                } else if (ratio < config_data.Min_level) {
                     ratio = 0
                 }
 
-                inv_led_index = (channel_led_count)-led_index
+                inv_led_index := (channel_led_count)-led_index
                 eq[inv_led_index] = int(ratio * 100)
 
-                tinted = utils.AvgColor(int(color), int(configData.Tint_color), configData.Tint_alpha)
+                tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
                 led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
-                led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, configData.Fade_ratio)
+                led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, config_data.Fade_ratio)
                 ws2811.SetLed(inv_led_index, led_colors[inv_led_index])
             }
 
             // Channel 2
-            for led_index = channel_2_start; led_index < channel_2_end; led_index++ {
+            for led_index := channel_2_start; led_index < channel_2_end; led_index++ {
                 ratio = utils.GetEnergy(energies, float64(led_index-channel_2_start)/led_divider)
-                ratio = math.Pow(ratio, configData.Pre_power)
-                ratio *= configData.Multi
-                ratio = math.Pow(ratio, configData.Post_power)
-                if ratio > configData.Max_level {
-                    ratio = configData.Max_level
-                } else if (ratio < configData.Min_level) {
+                ratio = math.Pow(ratio, config_data.Pre_power)
+                ratio *= config_data.Multi
+                ratio = math.Pow(ratio, config_data.Post_power)
+                if ratio > config_data.Max_level {
+                    ratio = config_data.Max_level
+                } else if (ratio < config_data.Min_level) {
                     ratio = 0
                 }
                 eq[led_index] = int(ratio * 100)
 
-                tinted = utils.AvgColor(int(color), int(configData.Tint_color), configData.Tint_alpha)
+                tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
                 led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(tinted), ratio)
-                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, configData.Fade_ratio)
+                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, config_data.Fade_ratio)
                 ws2811.SetLed(led_index, led_colors[led_index])
             }
 
@@ -104,13 +109,13 @@ func main() {
 
     go func() {
         var (
-            newConfig config.Config
+            new_config config.Config
             err error
         )
         for {
-            newConfig, err = config.Load()
+            new_config, err = config.Load()
             if (err == nil) {
-                configData = newConfig
+                config_data = new_config
             }
             time.Sleep(1000)
         }

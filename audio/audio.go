@@ -18,7 +18,7 @@ var (
     pitch       *aubio.Pitch
     phVoc       *aubio.PhaseVoc
     fb          *aubio.FilterBank
-    inBuff      *aubio.SimpleBuffer
+    tempo       *aubio.Tempo
 )
 
 func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
@@ -50,27 +50,54 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
 
     fmt.Println(errP)
 
+    pitch, phVoc, fb = getFilters()
 
-    pitch = aubio.NewPitch(
+    tempo = aubio.TempoOrDie(aubio.Complex, uint(*Bufsize), uint(*Blocksize), uint(*Samplerate))
+    tempo.SetSilence(-90.0)
+    tempo.SetThreshold(0.0)
+    return c, p
+}
+
+func getFilters() (*aubio.Pitch, *aubio.PhaseVoc, *aubio.FilterBank) {
+    pitcher := aubio.NewPitch(
         aubio.PitchDefault,
         uint(*Bufsize),
         uint(*Blocksize),
         uint(*Samplerate),
     )
-    pitch.SetUnit(aubio.PitchOutFreq)
-    pitch.SetTolerance(0.9)
+    pitcher.SetUnit(aubio.PitchOutFreq)
+    pitcher.SetTolerance(0.9)
 
-    phVoc, _ = aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
-    fb = aubio.NewFilterBank(40, uint(*Bufsize))
-    fb.SetMelCoeffsSlaney(uint(*Samplerate))
-
-    return c, p
+    phVocer, _ := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
+    fber := aubio.NewFilterBank(40, uint(*Bufsize))
+    fber.SetMelCoeffsSlaney(uint(*Samplerate))
+    return pitcher, phVocer, fber
 }
 
-func GetAnalaysis(buffer []float64) ([]float64, float64) {
-    inBuff = aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
-    pitch.Do(inBuff)
-    phVoc.Do(inBuff)
-    fb.Do(phVoc.Grain())
-    return fb.Buffer().Slice(), pitch.Buffer().Slice()[0]
+func PushBpm(buffer []float64) {
+    audioBuffer := aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
+    tempo.Do(audioBuffer)
+    audioBuffer.Free()
+}
+
+func GetBpm() (float64, float64) {
+    return tempo.GetBpm(), tempo.GetConfidence()
+}
+
+func GetPitchVal(buffer []float64) float64 {
+    audioBuffer := aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
+    pitch.Do(audioBuffer)
+    pitchVal := pitch.Buffer().Slice()[0]
+    audioBuffer.Free()
+    return pitchVal
+}
+
+func GetMelEnergies(buffer []float64) []float64 {
+    audioBuffer := aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
+    phVoc.Do(audioBuffer)
+    grain := phVoc.Grain()
+    fb.Do(grain)
+    melEnergies := fb.Buffer().Slice()
+    audioBuffer.Free()
+    return melEnergies
 }
