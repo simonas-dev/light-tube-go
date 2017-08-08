@@ -17,8 +17,8 @@ var (
     tinted          uint32
     config_data     config.Config
     led_colors      = make([]uint32, led_count)
-    buff            = make([]float64, int(1024))
-    avg_bpm         = 110.0 // Default average
+    buff            = make([]float64, int(512/2))
+    
     eq              = make([]int, led_count)
     led_count       = 144
 )
@@ -32,18 +32,23 @@ func main() {
 
     go func() {
         for {
-            c.Read(buff)
-            p.Write(buff)
-        }
-    }()
-    
-    go func() {
-        for {
-            bpm, conv := audio.GetBpm()
-            fmt.Println(bpm)
-            fmt.Println(conv)
-            fmt.Println()
-            time.Sleep(30 * time.Second)
+            samples, err := c.Read(buff)
+            if (samples == 0) {
+                break
+            }
+            if (err != nil) {
+                 break
+            }
+
+            samples, err = p.Write(buff)
+            
+            for (err != nil) {
+                fmt.Println(err)
+                samples, err = p.Write(buff)
+            }
+            if (err != nil) {
+                 break
+            }
         }
     }()
 
@@ -60,7 +65,7 @@ func main() {
         for {
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
-            audio.PushBpm(buff)
+
             color := utils.GetFloatColor(config_data.Note_Colors, utils.GetNoteIndex(pitch_val))
 
             // Channel 1
