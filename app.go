@@ -17,7 +17,7 @@ var (
     tinted          uint32
     config_data     config.Config
     led_colors      = make([]uint32, led_count)
-    buff            = make([]float64, int(512/2))
+    buff            = make([]float64, int(1024))
     
     eq              = make([]int, led_count)
     led_count       = 144
