@@ -10,7 +10,6 @@ import (
     "./audio"
 )
 
-// Non final vars
 var (
     ratio           float64
     led_index       int
@@ -18,9 +17,9 @@ var (
     config_data     config.Config
     led_colors      = make([]uint32, led_count)
     buff            = make([]float64, int(1024))
-    
     eq              = make([]int, led_count)
     led_count       = 144
+    correct_gamma   = false
 )
 
 func main() {
@@ -41,7 +40,7 @@ func main() {
             }
 
             samples, err = p.Write(buff)
-            
+
             for (err != nil) {
                 fmt.Println(err)
                 samples, err = p.Write(buff)
@@ -86,7 +85,7 @@ func main() {
                 tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
                 led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), int(tinted), ratio)
                 led_colors[inv_led_index] = utils.AvgColor(int(led_colors[inv_led_index]), 0, config_data.Fade_ratio)
-                ws2811.SetLed(inv_led_index, led_colors[inv_led_index])
+                ws2811.SetLed(inv_led_index, led_colors[inv_led_index], correct_gamma)
             }
 
             // Channel 2
@@ -105,7 +104,7 @@ func main() {
                 tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
                 led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(tinted), ratio)
                 led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, config_data.Fade_ratio)
-                ws2811.SetLed(led_index, led_colors[led_index])
+                ws2811.SetLed(led_index, led_colors[led_index], correct_gamma)
             }
 
             ws2811.Render()
@@ -125,7 +124,7 @@ func main() {
             time.Sleep(1000)
         }
     }()
-    
+
     for {
         time.Sleep(100)
     }
