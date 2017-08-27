@@ -38,6 +38,15 @@ func AvgColor(a int, b int, ratio float64) uint32{
     return uint32(int((c_a[0]*inv_ratio)+(c_b[0]*ratio)) << 16 + int((c_a[1]*inv_ratio)+(c_b[1]*ratio)) << 8 + int((c_a[2]*inv_ratio)+(c_b[2]*ratio)))
 }
 
+func FadeColorChannels(a int, ratio float64) uint32 {
+    color := GetColorNum(a)
+    red := (1 - ratio * math.Pow(color[0] / 255, 5)) * color[0]
+    green := (1 - ratio * math.Pow(color[1] / 255, 5)) * color[1]
+    blue := (1 - ratio * math.Pow(color[2] / 255, 5)) * color[2]
+
+    return uint32(int(red) << 16 + int(green) << 8 + int(blue))
+}
+
 func GetColorNum(color int) []float64 {
     return []float64{float64(color & 0xFF0000 >> 16), float64(color & 0xFF00 >> 8), float64(color & 0xFF)}
 }
