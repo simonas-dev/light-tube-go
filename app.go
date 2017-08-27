@@ -18,7 +18,7 @@ var (
     led_colors      = make([]uint32, led_count)
     buff            = make([]float64, int(1024))
     eq              = make([]int, led_count)
-    led_count       = 144
+    led_count       = 144 * 4
     correct_gamma   = false
 )
 
