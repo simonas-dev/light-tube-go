@@ -5,7 +5,7 @@
     "multi": 0.9,
     "post_power": 1.0,
     "tint_alpha": 0.0,
-    "fade_ratio": 0.05, 
+    "fade_ratio": 0.035, 
     "tint_color": "ff0000",
     "note_colors": [
         "FF0000", 
