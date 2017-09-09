@@ -16,7 +16,7 @@ var (
     tinted          uint32
     config_data     config.Config
     led_colors      = make([]uint32, led_count)
-    buff            = make([]float64, int(1024))
+    buff_channel    = make(chan []float64, int(1024))
     eq              = make([]int, led_count)
     led_count       = 144 * 4
     correct_gamma   = false
@@ -30,6 +30,7 @@ func main() {
     c, p := audio.NewAudio()
 
     go func() {
+        buff := make([]float64, int(1024))
         for {
             samples, err := c.Read(buff)
             if (samples == 0) {
@@ -48,6 +49,8 @@ func main() {
             if (err != nil) {
                  break
             }
+
+            buff_channel <- buff
         }
     }()
 
@@ -62,6 +65,7 @@ func main() {
         )
 
         for {
+            buff := <- buff_channel
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
 
@@ -121,11 +125,11 @@ func main() {
             if (err == nil) {
                 config_data = new_config
             }
-            time.Sleep(1000)
+            time.Sleep(1 * time.Second)
         }
     }()
 
     for {
-        time.Sleep(100)
+        time.Sleep(1 * time.Second)
     }
 }
