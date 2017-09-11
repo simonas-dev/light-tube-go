@@ -16,9 +16,10 @@ var (
     tinted          uint32
     config_data     config.Config
     led_colors      = make([]uint32, led_count)
+    avg_pitch       float64
     buff            = make([]float64, int(1024))
     eq              = make([]int, led_count)
-    led_count       = 144 * 4
+    led_count       = 144 * 4 - 12 // Rest in Pieces My Dead Diodes
     correct_gamma   = false
 )
 
@@ -64,8 +65,13 @@ func main() {
         for {
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
+            if (pitch_val < 9500) {
+                ratio := 0.75
+                avg_pitch = avg_pitch * ratio + pitch_val * (1-ratio)
+            }
+//          fmt.Println(avg_pitch)
 
-            color := utils.GetFloatColor(config_data.Note_Colors, utils.GetNoteIndex(pitch_val))
+            color := utils.GetFloatColor(config_data.Note_Colors, utils.GetNoteIndex(avg_pitch))
 
             // Channel 1
             for led_index := channel_1_start; led_index < channel_1_end; led_index++ {

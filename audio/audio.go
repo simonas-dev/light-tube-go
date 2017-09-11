@@ -29,8 +29,8 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
         *Samplerate,
         alsa.BufferParams{
             *Samplerate,
-            1,
-            1,
+            128,
+            2,
          },
     )
 
@@ -43,8 +43,8 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
         *Samplerate,
         alsa.BufferParams{
             *Samplerate,
-            1,
-            1,
+            128,
+            2,
         },
     )
 
@@ -66,7 +66,7 @@ func getFilters() (*aubio.Pitch, *aubio.PhaseVoc, *aubio.FilterBank) {
         uint(*Samplerate),
     )
     pitcher.SetUnit(aubio.PitchOutFreq)
-    pitcher.SetTolerance(0.9)
+//  pitcher.SetTolerance(0.99)
 
     phVocer, _ := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
     fber := aubio.NewFilterBank(40, uint(*Bufsize))
