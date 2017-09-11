@@ -127,11 +127,11 @@ func main() {
             if (err == nil) {
                 config_data = new_config
             }
-            time.Sleep(1000)
+            time.Sleep(1 * time.Second)
         }
     }()
 
     for {
-        time.Sleep(100)
+        time.Sleep(1 * time.Second)
     }
 }
