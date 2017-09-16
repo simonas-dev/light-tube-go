@@ -5,6 +5,7 @@ import (
     "github.com/simonassank/aubio-go"
     "fmt"
     "flag"
+    "time"
 )
 
 var (
@@ -12,6 +13,9 @@ var (
     Samplerate  = flag.Int("samplerate", 44100, "Sample rate to use for the audio file")
     Blocksize   = flag.Int("blocksize", 512, "Blocksize use for the audio file")
     Bufsize     = flag.Int("bufsize", 1024, "Bufsize use for the audio file")
+    Periods     = flag.Int("periods", 1, "Periods")
+    PerFrames   = flag.Int("perframes", 1, "Period frames")
+    Verbose     = false
 )
 
 var (
@@ -21,6 +25,35 @@ var (
     tempo       *aubio.Tempo
 )
 
+func AudioPassThrough(interceptor chan []float64) {
+    c, p := NewAudio()
+    buff := make([]float64, *Bufsize)
+    for {
+        start := time.Now()
+
+        samples, err := c.Read(buff)
+        if (samples == 0) {
+            break
+        }
+        if (err != nil) {
+            break
+        }
+        samples, err = p.Write(buff)
+        for (err != nil) {
+            fmt.Println(err)
+            samples, err = p.Write(buff)
+        }
+        if (err != nil) {
+            break
+        }
+
+        interceptor <- buff
+        if (Verbose) {
+            fmt.Println("Audio ", time.Now().Sub(start))
+        }
+    }
+}
+
 func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
     c, errC := alsa.NewCaptureDevice(
         "plughw:CARD=Device,DEV=0",
@@ -29,8 +62,8 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
         *Samplerate,
         alsa.BufferParams{
             *Samplerate,
-            128,
-            2,
+            *PerFrames,
+            *Periods,
          },
     )
 
@@ -43,8 +76,8 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
         *Samplerate,
         alsa.BufferParams{
             *Samplerate,
-            128,
-            2,
+            *PerFrames,
+            *Periods,
         },
     )
 
@@ -87,7 +120,7 @@ func GetBpm() (float64, float64) {
 func GetPitchVal(buffer []float64) float64 {
     audioBuffer := aubio.NewSimpleBufferData(uint(*Bufsize), buffer)
     pitch.Do(audioBuffer)
-    pitchVal := pitch.Buffer().Slice()[0]
+    pitchVal := pitch.Buffer().Slice()[0] * 2
     audioBuffer.Free()
     return pitchVal
 }
@@ -101,3 +134,4 @@ func GetMelEnergies(buffer []float64) []float64 {
     audioBuffer.Free()
     return melEnergies
 }
+

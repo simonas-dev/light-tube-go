@@ -1,6 +1,8 @@
 package utils
 
-import "math"
+import (
+    "math"
+)
 
 var (
     A4 = 440.0
@@ -35,7 +37,13 @@ func AvgColor(a int, b int, ratio float64) uint32{
     inv_ratio := 1-ratio
     c_a := GetColorNum(a)
     c_b := GetColorNum(b)
-    return uint32(int((c_a[0]*inv_ratio)+(c_b[0]*ratio)) << 16 + int((c_a[1]*inv_ratio)+(c_b[1]*ratio)) << 8 + int((c_a[2]*inv_ratio)+(c_b[2]*ratio)))
+    return CreateColor(int((c_a[0]*inv_ratio)+(c_b[0]*ratio)), int((c_a[1]*inv_ratio)+(c_b[1]*ratio)), int((c_a[2]*inv_ratio)+(c_b[2]*ratio)))
+}
+
+func AddColor(a int, b int, ratio float64) uint32 {
+    c_a := GetColorNum(a)
+    c_b := GetColorNum(b)
+    return CreateColor(int(c_a[0] + c_b[0] * ratio), int(c_a[1] + c_b[1] * ratio), int(c_a[2] + c_b[2] * ratio))
 }
 
 func FadeColorChannels(a int, ratio float64) uint32 {
@@ -47,6 +55,19 @@ func FadeColorChannels(a int, ratio float64) uint32 {
     return uint32(int(red) << 16 + int(green) << 8 + int(blue))
 }
 
+func CreateColor(r int, g int, b int) uint32 {
+    if (r > 255) {
+        r = 255
+    }
+    if (g > 255) {
+        g = 255
+    }
+    if (b > 255) {
+        b = 255
+    }
+    return uint32(r << 16 + g << 8 + b)
+}
+
 func GetColorNum(color int) []float64 {
     return []float64{float64(color & 0xFF0000 >> 16), float64(color & 0xFF00 >> 8), float64(color & 0xFF)}
 }
@@ -55,7 +76,14 @@ func GetNoteIndex(freqHz float64) float64 {
     div := freqHz/C0
     if div == 0 { return 0 }
     h := 12 * math.Log2(div)
+    if (h < 0) { return 0 }
     rem := h - float64(int(h))
     n := int(h) % 12.0
     return float64(n)+rem
+}
+
+func GetNoteIndex2(freqHz float64) float64 {
+    if (freqHz < 200 && freqHz > 42000) { return 0 }
+    if (freqHz > 800) { return 11 }
+    return ((freqHz+200) / 1000) * 11
 }
