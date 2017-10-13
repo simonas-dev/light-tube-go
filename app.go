@@ -81,7 +81,7 @@ func main() {
 
                 tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
                 led_colors[led_index] = utils.AddColor(int(led_colors[led_index]), int(tinted), ratio)
-                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), 0, config_data.Fade_ratio)
+                led_colors[led_index] = utils.FadeColor(int(led_colors[led_index]), config_data.Fade_ratio)
                 leds.SetMirror(led_index, led_count, led_colors[led_index])
             }
 

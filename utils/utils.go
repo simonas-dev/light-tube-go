@@ -40,10 +40,14 @@ func AvgColor(a int, b int, ratio float64) uint32{
     return CreateColor(int((c_a[0]*inv_ratio)+(c_b[0]*ratio)), int((c_a[1]*inv_ratio)+(c_b[1]*ratio)), int((c_a[2]*inv_ratio)+(c_b[2]*ratio)))
 }
 
-func FadeColor(color int, ratio float64) uint32 {
-    inv_ratio := 1-ratio
+func FadeColor(color int, fade_ratio float64) uint32 {
     arr := GetColorNum(color)
-    return CreateColor(int(arr[0] * inv_ratio), int(arr[1] * inv_ratio), int(arr[2] * inv_ratio))
+    res := make([]int, 3)
+    for index, color := range arr {
+        ratio := math.Pow(color / 255, 1.0)
+        res[index] = int(color - (color * fade_ratio) * ratio)
+    }
+    return CreateColor(res[0], res[1], res[2])
 }
 
 func AddColor(a int, b int, ratio float64) uint32 {
