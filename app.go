@@ -43,7 +43,7 @@ func main() {
     time.Sleep(1 * time.Second)
 
     go func() {
-        var (
+	var (
             channel_led_count       = led_count/2
             led_divider             = float64(channel_led_count)/40.0
             channel_1_start         = 0
