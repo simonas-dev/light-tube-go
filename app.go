@@ -43,7 +43,7 @@ func main() {
     time.Sleep(1 * time.Second)
 
     go func() {
-	var (
+        var (
             channel_led_count       = led_count/2
             led_divider             = float64(channel_led_count)/40.0
             channel_1_start         = 0
@@ -51,18 +51,17 @@ func main() {
         )
 
         for {
-//          start := time.Now()
-//          fmt.Println(buff)
+            if (!audio.IsReady) {
+                time.Sleep(1 * time.Second)
+                continue
+            }
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
-            fmt.Println(pitch_val)
             if (pitch_val < 9500) {
                 ratio := 0.5
-
                 avg_pitch = avg_pitch * ratio + pitch_val * (1-ratio)
             }
             note_index := utils.GetNoteIndex(avg_pitch)
-            fmt.Println(note_index)
             color := utils.GetFloatColor(config_data.Note_Colors, note_index)
 
             // Channel 1
@@ -86,8 +85,6 @@ func main() {
             }
 
             ws2811.Render()
-
-//          fmt.Println("LED ", time.Now().Sub(start))
         }
     }()
 
@@ -101,7 +98,7 @@ func main() {
             if (err == nil) {
                 config_data = new_config
             }
-            time.Sleep(1 * time.Second)
+            time.Sleep(10 * time.Second)
         }
     }()
 

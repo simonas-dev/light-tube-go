@@ -23,10 +23,12 @@ var (
     phVoc       *aubio.PhaseVoc
     fb          *aubio.FilterBank
     tempo       *aubio.Tempo
+    IsReady     = false
 )
 
 func AudioPassThrough(interceptor chan []float64) {
     c, p := NewAudio()
+    IsReady = true
     buff := make([]float64, *Bufsize)
     for {
         start := time.Now()
@@ -81,7 +83,7 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
         },
     )
 
-    fmt.Println("Playback err",errP)
+    fmt.Println("Playback err", errP)
     fmt.Println("filters start")
     pitch, phVoc, fb = getFilters()
     fmt.Println("filters done")
@@ -92,7 +94,6 @@ func NewAudio() (c *alsa.CaptureDevice, p *alsa.PlaybackDevice) {
 }
 
 func getFilters() (*aubio.Pitch, *aubio.PhaseVoc, *aubio.FilterBank) {
-    fmt.Println("wtf")
     pitcher := aubio.NewPitch(
         aubio.PitchDefault,
         uint(*Bufsize),
@@ -101,10 +102,7 @@ func getFilters() (*aubio.Pitch, *aubio.PhaseVoc, *aubio.FilterBank) {
     )
     pitcher.SetUnit(aubio.PitchOutFreq)
 //  pitcher.SetTolerance(0.99)
-    fmt.Println("get phvoc")
-    phVocer, err := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
-    fmt.Print("phVocer", phVocer)
-    fmt.Print("phVocer:err", err)
+    phVocer, _ := aubio.NewPhaseVoc(uint(*Bufsize), uint(*Blocksize))
     fber := aubio.NewFilterBank(40, uint(*Bufsize))
     fber.SetMelCoeffsSlaney(uint(*Samplerate))
     return pitcher, phVocer, fber
