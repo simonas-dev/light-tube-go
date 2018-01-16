@@ -41,12 +41,9 @@ func AudioPassThrough(interceptor chan []float64) {
             break
         }
         samples, err = p.Write(buff)
-        for (err != nil) {
-            fmt.Println(err)
-            samples, err = p.Write(buff)
-        }
+
         if (err != nil) {
-            break
+            fmt.Println(err)
         }
 
         interceptor <- buff

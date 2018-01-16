@@ -25,22 +25,26 @@ var (
 )
 
 func main() {
+    defer ws2811.Fini()
+
     fmt.Println("Go!")
 
     ws2811.Init(18, led_count, 255)
 
+    config_data, _ = config.Load()
+
     channel := make(chan []float64, int(*audio.Bufsize))
     go audio.AudioPassThrough(channel)
+
+    leds.TurnOn(led_count)
+
+    time.Sleep(1 * time.Second)
 
     go func() {
         for {
             buff = <-channel
         }
     }()
-
-    leds.TurnOn(led_count)
-
-    time.Sleep(1 * time.Second)
 
     go func() {
         var (
@@ -64,6 +68,11 @@ func main() {
             note_index := utils.GetNoteIndex(avg_pitch)
             color := utils.GetFloatColor(config_data.Note_Colors, note_index)
 
+            min, _ := MinMax(energies)
+            for index, value := range energies {
+                 energies[index] = value - min
+            }
+
             // Channel 1
             for led_index := channel_1_start; led_index < channel_1_end; led_index++ {
                 ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
@@ -77,32 +86,46 @@ func main() {
                 }
 
                 eq[led_index] = int(ratio * 100)
-
-                tinted = utils.AvgColor(int(color), int(config_data.Tint_color), config_data.Tint_alpha)
-                led_colors[led_index] = utils.AddColor(int(led_colors[led_index]), int(tinted), ratio)
+                led_colors[led_index] = utils.AddColor(int(led_colors[led_index]), int(color), ratio)
+                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(color), config_data.Tint_alpha * ratio)
                 led_colors[led_index] = utils.FadeColor(int(led_colors[led_index]), config_data.Fade_ratio)
                 leds.SetMirror(led_index, led_count, led_colors[led_index])
             }
 
             ws2811.Render()
+            ws2811.Wait()
         }
     }()
 
-    go func() {
-        var (
-            new_config config.Config
-            err error
-        )
-        for {
-            new_config, err = config.Load()
-            if (err == nil) {
-                config_data = new_config
-            }
-            time.Sleep(10 * time.Second)
-        }
-    }()
+    // go func() {
+    //     var (
+    //         new_config config.Config
+    //         err error
+    //     )
+    //     for {
+    //         new_config, err = config.Load()
+    //         if (err == nil) {
+    //             config_data = new_config
+    //         }
+    //         time.Sleep(10 * time.Second)
+    //     }
+    // }()
 
     for {
         time.Sleep(1 * time.Second)
     }
+}
+
+func MinMax(array []float64) (float64, float64) {
+    var max float64 = array[0]
+    var min float64 = array[0]
+    for _, value := range array {
+        if max < value {
+            max = value
+        }
+        if min > value {
+            min = value
+        }
+    }
+    return min, max
 }
