@@ -2,7 +2,6 @@ package main
 
 import (
     "fmt"
-    "github.com/simonassank/go_ws2811"
     "math"
     "time"
     "./config"
@@ -25,18 +24,16 @@ var (
 )
 
 func main() {
-    defer ws2811.Fini()
+    defer leds.Close()
 
     fmt.Println("Go!")
 
-    ws2811.Init(18, led_count, 255)
+    leds.Init()
 
     config_data, _ = config.Load()
 
     channel := make(chan []float64, int(*audio.Bufsize))
     go audio.AudioPassThrough(channel)
-
-    leds.TurnOn(led_count)
 
     time.Sleep(1 * time.Second)
 
@@ -92,8 +89,7 @@ func main() {
                 leds.SetMirror(led_index, led_count, led_colors[led_index])
             }
 
-            ws2811.Render()
-            ws2811.Wait()
+            leds.Render()
         }
     }()
 
