@@ -8,7 +8,17 @@ import (
     "./utils"
     "./audio"
     "./leds"
+    // "os"
+    // "bufio"
+    // "strconv"
 )
+
+
+type TimelineItem struct {
+    BufferId uint64
+    RatioArr []float64
+    Color    uint32
+}
 
 var (
     ratio           float64
@@ -21,6 +31,14 @@ var (
     eq              = make([]int, led_count)
     led_count       = 144 * 4
     correct_gamma   = false
+    timelineArr     []TimelineItem
+)
+
+var (
+    channel_led_count       = led_count/2
+    led_divider             = float64(channel_led_count)/40.0
+    channel_1_start         = 0
+    channel_1_end           = channel_led_count
 )
 
 func main() {
@@ -32,30 +50,17 @@ func main() {
 
     config_data, _ = config.Load()
 
-    channel := make(chan []float64, int(*audio.Bufsize))
-    go audio.AudioPassThrough(channel)
-
-    time.Sleep(1 * time.Second)
-
-    go func() {
-        for {
-            buff = <-channel
-        }
-    }()
+    bufferChannel := make(chan []float64, int(*audio.Bufsize))
+    playbackChannel := make(chan uint64)
+    go audio.AudioPassThrough(bufferChannel, playbackChannel)
 
     go func() {
-        var (
-            channel_led_count       = led_count/2
-            led_divider             = float64(channel_led_count)/40.0
-            channel_1_start         = 0
-            channel_1_end           = channel_led_count
-        )
-
         for {
             if (!audio.IsReady) {
                 time.Sleep(1 * time.Second)
                 continue
             }
+            bufferId := uint64(audio.BufferId)
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
             if (pitch_val < 9500) {
@@ -70,6 +75,7 @@ func main() {
                  energies[index] = value - min
             }
 
+            ratioArr := make([]float64, channel_1_end)
             // Channel 1
             for led_index := channel_1_start; led_index < channel_1_end; led_index++ {
                 ratio = utils.GetEnergy(energies, float64(led_index)/led_divider)
@@ -81,35 +87,99 @@ func main() {
                 } else if (ratio < config_data.Min_level) {
                     ratio = 0
                 }
+                ratioArr[led_index] = ratio
+            }
+            
+            timelineArr = append(timelineArr, TimelineItem {
+                bufferId,
+                ratioArr,
+                color,
+            })
 
-                eq[led_index] = int(ratio * 100)
-                led_colors[led_index] = utils.AddColor(int(led_colors[led_index]), int(color), ratio)
-                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(color), config_data.Tint_alpha * ratio)
+            // fmt.Println("Add To Timeline")
+        }
+    }()
+
+    go func() {
+        _ = <-playbackChannel
+        fmt.Println("Start Render")
+
+        // f, _ := os.Create("./timeline.csv")
+
+        lastRenderIndex := -1
+
+        for {
+            bufferId := uint64(audio.WriterId)
+            index := TimelineIndexOf(timelineArr, bufferId)
+            
+            if (lastRenderIndex == index) {
+                continue
+            }
+
+            timelineItem := timelineArr[index]
+            
+            // logLine := ""
+
+            for led_index := channel_1_start; led_index < channel_1_end; led_index++ {
+                ratio := ReturnTimelineEnergy(timelineArr, index, led_index, 0)
+                // if (led_index == 20) {
+                //     ratioStr := strconv.FormatFloat(ratio, 'E', 5, 64)
+                //     logLine += ratioStr
+                // }
+                led_colors[led_index] = utils.AddColor(int(led_colors[led_index]), int(timelineItem.Color), ratio)               
+                led_colors[led_index] = utils.AvgColor(int(led_colors[led_index]), int(timelineItem.Color), config_data.Tint_alpha * ratio)
                 led_colors[led_index] = utils.FadeColor(int(led_colors[led_index]), config_data.Fade_ratio)
                 leds.SetMirror(led_index, led_count, led_colors[led_index])
             }
+
+            
+            // w := bufio.NewWriter(f)
+            // w.WriteString(logLine + "\n")
+            // w.Flush()
+            // fmt.Println("Save Log File")
 
             leds.Render()
         }
     }()
 
-    // go func() {
-    //     var (
-    //         new_config config.Config
-    //         err error
-    //     )
-    //     for {
-    //         new_config, err = config.Load()
-    //         if (err == nil) {
-    //             config_data = new_config
-    //         }
-    //         time.Sleep(10 * time.Second)
-    //     }
-    // }()
+    go func() {
+        var (
+            new_config config.Config
+            err error
+        )
+        for {
+            new_config, err = config.Load()
+            if (err == nil) {
+                config_data = new_config
+            }
+            time.Sleep(1 * time.Second)
+        }
+    }()
 
     for {
-        time.Sleep(1 * time.Second)
+        buff = <-bufferChannel
     }
+}
+
+func ReturnTimelineEnergy(array []TimelineItem, centerIndex int, energyIndex int, avgWeight int) float64 {
+    sum := float64(0)
+    couter := 0
+    for index := centerIndex - avgWeight; index <= centerIndex + avgWeight; index++ {
+        if (index > 0 && index < len(array)) {
+            sum += array[index].RatioArr[energyIndex]
+            couter += 1
+        }
+    }
+    return sum / float64(couter)
+}
+
+func TimelineIndexOf(array []TimelineItem, bufferId uint64) int {
+    for index := 0; index < len(array); index++ {
+        if (array[index].BufferId >= bufferId) {
+            return index
+        }
+    }
+    return -1
 }
 
 func MinMax(array []float64) (float64, float64) {

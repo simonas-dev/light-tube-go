@@ -5,7 +5,6 @@ import (
     "github.com/simonassank/aubio-go"
     "fmt"
     "flag"
-    "time"
 )
 
 var (
@@ -15,7 +14,6 @@ var (
     Bufsize     = flag.Int("bufsize", 1024, "Bufsize use for the audio file")
     Periods     = flag.Int("periods", 1, "Periods")
     PerFrames   = flag.Int("perframes", 1, "Period frames")
-    Verbose     = false
 )
 
 var (
@@ -24,31 +22,44 @@ var (
     fb          *aubio.FilterBank
     tempo       *aubio.Tempo
     IsReady     = false
+    BufferId    = uint64(0)
+    WriterId    = uint64(0)
 )
 
-func AudioPassThrough(interceptor chan []float64) {
+func AudioPassThrough(bufferChannel chan []float64, playbackChannel chan uint64) {
     c, p := NewAudio()
     IsReady = true
     buff := make([]float64, *Bufsize)
+    timeline := [][]float64{}
+    isWrite := false
     for {
-        start := time.Now()
+        if (!isWrite || len(timeline) < 100) {
+            BufferId += 1
+            samples, err := c.Read(buff)
+            if (samples == 0) {
+                break
+            }
+            if (err != nil) {
+                break
+            }
+            buffCopy := make([]float64, *Bufsize)
+            copy(buffCopy, buff)
+            timeline = append(timeline, buffCopy)
+            bufferChannel <- buff
+            isWrite = true
+        } else {
+            if (WriterId == 0) {
+                playbackChannel <- 0
+            }
+            WriterId += 1
+            oldBuff := timeline[0]
+            timeline = timeline[1:]
+            _, err := p.Write(oldBuff)
+            if (err != nil) {
+                fmt.Println(err)
+            }
 
-        samples, err := c.Read(buff)
-        if (samples == 0) {
-            break
-        }
-        if (err != nil) {
-            break
-        }
-        samples, err = p.Write(buff)
-
-        if (err != nil) {
-            fmt.Println(err)
-        }
-
-        interceptor <- buff
-        if (Verbose) {
-            fmt.Println("Audio ", time.Now().Sub(start))
+            isWrite = false
         }
     }
 }

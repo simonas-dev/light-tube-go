@@ -24,9 +24,6 @@ func Init() {
     fmt.Println("Done")
 
     c = controller
-
-    c.SetLed(100, uint32(0xff0000))
-    c.Render()
 }
 
 func SetMirror(index int, total int, color uint32) {
