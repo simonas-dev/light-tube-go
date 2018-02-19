@@ -13,6 +13,8 @@ var (
 
 
 type ConfigJSON struct {
+    Note_ratio float64 `json:"note_ratio"`
+    Min_energy_subraction bool `json:"min_energy_subraction"`
     Max_level float64 `json:"max_level"`
     Min_level float64 `json:"min_level"`
     Pre_power float64 `json:"pre_power"`
@@ -25,6 +27,8 @@ type ConfigJSON struct {
 }
 
 type Config struct {
+    Note_ratio float64
+    Min_energy_subraction bool
     Max_level float64
     Min_level float64
     Pre_power float64
@@ -44,6 +48,8 @@ func Load() (Config, error) {
     
     if (len(jsonData.Note_Colors) > 0) {
         config = Config {
+            Note_ratio: jsonData.Note_ratio,
+            Min_energy_subraction: jsonData.Min_energy_subraction,
             Max_level: jsonData.Max_level,
             Min_level: jsonData.Min_level,
             Pre_power: jsonData.Pre_power,

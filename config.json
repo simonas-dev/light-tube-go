@@ -1,4 +1,6 @@
 {
+    "note_ratio": 0.5,
+    "min_energy_subraction": true,
     "max_level": 1.0,
     "min_level": 0.0,
     "pre_power": 1.0,

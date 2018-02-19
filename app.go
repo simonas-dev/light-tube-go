@@ -59,15 +59,18 @@ func main() {
             energies := audio.GetMelEnergies(buff)
             pitch_val := audio.GetPitchVal(buff)
             if (pitch_val < 9500) {
-                ratio := 0.5
+                ratio := config_data.Note_ratio
                 avg_pitch = avg_pitch * ratio + pitch_val * (1-ratio)
             }
             note_index := utils.GetNoteIndex(avg_pitch)
             color := utils.GetFloatColor(config_data.Note_Colors, note_index)
 
-            min, _ := MinMax(energies)
-            for index, value := range energies {
-                 energies[index] = value - min
+            // Reduce Noise
+            if (config_data.Min_energy_subraction) {
+                min, _ := MinMax(energies)
+                for index, value := range energies {
+                    energies[index] = value - min
+                }
             }
 
             // Channel 1
@@ -93,19 +96,19 @@ func main() {
         }
     }()
 
-    // go func() {
-    //     var (
-    //         new_config config.Config
-    //         err error
-    //     )
-    //     for {
-    //         new_config, err = config.Load()
-    //         if (err == nil) {
-    //             config_data = new_config
-    //         }
-    //         time.Sleep(10 * time.Second)
-    //     }
-    // }()
+    go func() {
+         var (
+             new_config config.Config
+            err error
+        )
+        for {
+            new_config, err = config.Load()
+            if (err == nil) {
+                config_data = new_config
+            }
+            time.Sleep(1 * time.Second)
+        }
+    }()
 
     for {
         time.Sleep(1 * time.Second)
