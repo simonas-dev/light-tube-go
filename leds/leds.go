@@ -11,7 +11,8 @@ var (
 
 func Init() {
     config := ws2811.DefaultConfig
-    config.Brightness = 155
+    config.Brightness = 255
+    config.Invert = false
 
     controller, err := ws2811.New(144*4, &config); if (err != nil) {
     fmt.Println(err)

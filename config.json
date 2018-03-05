@@ -1,5 +1,5 @@
 {
-    "note_ratio": 0.5,
+    "note_ratio": 0.85,
     "min_energy_subraction": true,
     "max_level": 1.0,
     "min_level": 0.0,
@@ -7,7 +7,7 @@
     "multi": 0.9,
     "post_power": 1.0,
     "tint_alpha": 0.2,
-    "fade_ratio": 0.1, 
+    "fade_ratio": 0.05, 
     "tint_color": "ff0000",
     "note_colors": [
         "FF0000", 
