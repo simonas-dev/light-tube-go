@@ -1,7 +1,7 @@
 package leds
 
 import (
-    "github.com/simonassank/go_ws2811"
+    "../pkg/go_ws2811"
     "fmt"
 )
 

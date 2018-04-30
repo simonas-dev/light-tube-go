@@ -1,0 +1,9 @@
+[submodule "pkg/goalsa"]
+	path = pkg/goalsa
+	url = https://github.com/cocoonlife/goalsa
+[submodule "pkg/aubio-go"]
+	path = pkg/aubio-go
+	url = https://github.com/simonassank/aubio-go
+[submodule "pkg/go_ws2811"]
+	path = pkg/go_ws2811
+	url = https://github.com/simonassank/go_ws2811

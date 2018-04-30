@@ -1,8 +1,8 @@
 package audio
 
 import (
-    "github.com/cocoonlife/goalsa"
-    "github.com/simonassank/aubio-go"
+    "../pkg/goalsa"
+    "../pkg/aubio-go"
     "fmt"
     "flag"
     "time"
