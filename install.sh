@@ -20,7 +20,3 @@ cd python
 sudo python setup.py install
 cd ../../../
 
-# Gvm
-go get github.com/cocoonlife/goalsa
-go get github.com/simonassank/aubio-go
-go get github.com/simonassank/go_ws2811

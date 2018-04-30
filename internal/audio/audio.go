@@ -1,8 +1,8 @@
 package audio
 
 import (
-    "../pkg/goalsa"
-    "../pkg/aubio-go"
+    "../../pkg/goalsa"
+    "../../pkg/aubio-go"
     "fmt"
     "flag"
     "time"
