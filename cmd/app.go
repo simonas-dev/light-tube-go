@@ -4,10 +4,10 @@ import (
     "fmt"
     "math"
     "time"
-    "./config"
-    "./utils"
-    "./audio"
-    "./leds"
+    "../config"
+    "../utils"
+    "../internal/audio"
+    "../internal/leds"
 )
 
 var (
