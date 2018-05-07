@@ -59,7 +59,19 @@ func AddColor(a int, b int, ratio float64) uint32 {
 func MinusColor(a int, b int) uint32 {
 	c_a := GetColorNum(a)
 	c_b := GetColorNum(b)
-	return CreateColor(int(c_a[0]-c_b[0]), int(c_a[1]-c_b[1]), int(c_a[2]-c_b[2]))
+	red := int(c_a[0] - c_b[0])
+	if red < 0 {
+		red = 0
+	}
+	blue := int(c_a[1] - c_b[1])
+	if blue < 0 {
+		blue = 0
+	}
+	green := int(c_a[2] - c_b[2])
+	if green < 0 {
+		green = 0
+	}
+	return CreateColor(red, green, blue)
 }
 
 func FadeColorChannels(a int, ratio float64) uint32 {
