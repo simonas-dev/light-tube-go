@@ -7,3 +7,6 @@
 [submodule "pkg/go_ws2811"]
 	path = pkg/go_ws2811
 	url = https://github.com/simonassank/go_ws2811
+[submodule "pkg/go-socket.io"]
+	path = pkg/go-socket.io
+	url = https://github.com/googollee/go-socket.io.git
