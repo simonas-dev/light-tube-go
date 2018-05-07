@@ -67,7 +67,8 @@ func ReduceWithRipple(current []uint32, configData config.Config) {
 	max := int(len(current) - 1)
 	for index := 1; index < max; index++ {
 		temp := utils.AvgColor(int(previous[index-1]), int(previous[index+1]), 0.5)
-		current[index] = utils.MinusColor(int(temp), int(current[index]))
-		current[index] = uint32(float64(current[index]) * configData.FadeRatio)
+		current[index] = temp
+		//current[index] = utils.MinusColor(int(temp), int(current[index]), 0.05)
+		current[index] = utils.FadeColor(int(current[index]), 0.01)
 	}
 }

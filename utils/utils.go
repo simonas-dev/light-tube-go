@@ -56,18 +56,18 @@ func AddColor(a int, b int, ratio float64) uint32 {
 	return CreateColor(int(c_a[0]+c_b[0]*ratio), int(c_a[1]+c_b[1]*ratio), int(c_a[2]+c_b[2]*ratio))
 }
 
-func MinusColor(a int, b int) uint32 {
+func MinusColor(a int, b int, ratio float64) uint32 {
 	c_a := GetColorNum(a)
 	c_b := GetColorNum(b)
-	red := int(c_a[0] - c_b[0])
+	red := int(c_a[0] - c_b[0] * ratio)
 	if red < 0 {
 		red = 0
 	}
-	blue := int(c_a[1] - c_b[1])
+	blue := int(c_a[1] - c_b[1] * ratio)
 	if blue < 0 {
 		blue = 0
 	}
-	green := int(c_a[2] - c_b[2])
+	green := int(c_a[2] - c_b[2] * ratio)
 	if green < 0 {
 		green = 0
 	}

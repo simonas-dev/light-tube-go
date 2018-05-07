@@ -43,8 +43,8 @@ func main() {
 			pitchVal := audio.GetPitchVal(buff)
 
 			anims.ReduceAubioAnim(ledColors, energies, pitchVal, avgPitch, configData)
-			anims.ReduceWithFade(ledColors, configData)
-			// anims.ReduceWithRipple(ledColors, configData)
+			// anims.ReduceWithFade(ledColors, configData)
+			anims.ReduceWithRipple(ledColors, configData)
 
 			leds.SetArray(ledColors)
 			leds.Render()
