@@ -38,6 +38,12 @@ func SetMirror(index int, total int, color uint32) {
 	c.SetLed(pivot+index, color)
 }
 
+func SetArray(array []uint32) {
+	for index, color := range array {
+		c.SetLed(index, color)
+	}
+}
+
 func Render() {
 	c.Render()
 }
