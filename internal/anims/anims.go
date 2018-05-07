@@ -59,3 +59,15 @@ func ReduceWithFade(src []uint32, configData config.Config) {
 		src[index] = utils.FadeColor(int(item), configData.FadeRatio)
 	}
 }
+
+// ReduceWithRipple TOOD
+func ReduceWithRipple(current []uint32, configData config.Config) {
+	var previous = make([]uint32, len(current))
+	copy(previous, current)
+	max := int(len(current) - 1)
+	for index := 1; index < max; index++ {
+		temp := utils.AvgColor(int(previous[index-1]), int(previous[index+1]), 0.5)
+		current[index] = utils.MinusColor(int(temp), int(current[index]))
+		current[index] = uint32(float64(current[index]) * configData.FadeRatio)
+	}
+}

@@ -42,7 +42,8 @@ func main() {
 			energies := audio.GetMelEnergies(buff)
 			pitchVal := audio.GetPitchVal(buff)
 
-			anims.ReduceAubioAnim(ledColors, energies, pitchVal)
+			anims.ReduceAubioAnim(ledColors, energies, pitchVal, avgPitch, configData)
+			anims.ReduceWithRipple(ledColors, configData)
 
 			leds.SetArray(ledColors)
 			leds.Render()
@@ -51,8 +52,8 @@ func main() {
 
 	go func() {
 		var (
-			configData config.Config
-			err        error
+			newConfig config.Config
+			err       error
 		)
 		for {
 			newConfig, err = config.Load()
