@@ -105,12 +105,12 @@ func GetNoteIndex(freqHz float64, size int) float64 {
 	if div == 0 {
 		return 0
 	}
-	h := size * math.Log2(div)
+	h := float64(size) * math.Log2(div)
 	if h < 0 {
 		return 0
 	}
 	rem := h - float64(int(h))
-	n := int(h) % float64(size)
+	n := int(h) % size
 	return float64(n) + rem
 }
 
