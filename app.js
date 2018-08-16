@@ -9,7 +9,7 @@ var goProcessCode = null
 
 function killProcess() {
   if (goProcessCode != null) {
-    goProcessCode.kill()
+    exec("sudo pkill -TERM -P " + goProcessCode.pid)
   }
 }
 
