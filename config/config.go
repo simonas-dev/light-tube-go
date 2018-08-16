@@ -57,7 +57,7 @@ func Load() (Config, error) {
 			TintAlpha:           jsonData.TintAlpha,
 			FadeRatio:           jsonData.FadeRatio,
 			TintColor:           hexStrToInt(jsonData.TintColor),
-			NoteColors:          hexStrArrToIntArr(jsonData.NoteColors)}
+			NoteColors:          hexStrArrToIntArr(jsonData.NoteColors, len(jsonData.NoteColors))}
 		return config, nil
 	} else {
 		return config, errors.New("I/O fuckup")
@@ -69,9 +69,9 @@ func hexStrToInt(hex string) uint32 {
 	return uint32(num)
 }
 
-func hexStrArrToIntArr(hexArr []string) []uint32 {
-	numArr := make([]uint32, 12)
-	for i := 0; i < 12; i++ {
+func hexStrArrToIntArr(hexArr []string, size int) []uint32 {
+	numArr := make([]uint32, size)
+	for i := 0; i < size; i++ {
 		numArr[i] = hexStrToInt(hexArr[i])
 	}
 	return numArr
