@@ -100,17 +100,17 @@ func GetColorNum(color int) []float64 {
 	return []float64{float64(color & 0xFF0000 >> 16), float64(color & 0xFF00 >> 8), float64(color & 0xFF)}
 }
 
-func GetNoteIndex(freqHz float64) float64 {
+func GetNoteIndex(freqHz float64, size int) float64 {
 	div := freqHz / C0
 	if div == 0 {
 		return 0
 	}
-	h := 12 * math.Log2(div)
+	h := size * math.Log2(div)
 	if h < 0 {
 		return 0
 	}
 	rem := h - float64(int(h))
-	n := int(h) % 12.0
+	n := int(h) % float64(size)
 	return float64(n) + rem
 }
 

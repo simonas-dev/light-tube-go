@@ -21,7 +21,7 @@ func ReduceAubioAnim(ledColors []uint32, energies []float64, pitchVal float64, a
 		ratio := configData.NoteRatio
 		avgPitch = avgPitch*ratio + pitchVal*(1-ratio)
 	}
-	noteIndex := utils.GetNoteIndex(avgPitch)
+	noteIndex := utils.GetNoteIndex(avgPitch, configData.NoteColors.len())
 	color := utils.GetFloatColor(configData.NoteColors, noteIndex)
 
 	var ratio float64
