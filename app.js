@@ -9,7 +9,7 @@ var goProcessCode = null
 
 function killProcess() {
   if (goProcessCode != null) {
-    goProcessCode.kill()
+    exec("sudo pkill -TERM -P " + goProcessCode.pid)
   }
 }
 
@@ -25,13 +25,14 @@ io.on('connection', function(socket){
     var map = {
       "start": function() {
         killProcess()
-        goProcessCode = exec("./run")
+        goProcessCode = exec("sudo ./bin/app")
         console.log("start " + goProcessCode.pid)
       },
       "build": function() {
         killProcess()
-        goProcessCode = exec("./build")
-        console.log("build " + goProcessCode.pid)
+        execSync("go build -o ./bin/app cmd/app.go")
+        goProcessCode = exec("sudo ./bin/app")
+	console.log("build " + goProcessCode.pid)
       },
       "kill": function() {
         killProcess()
