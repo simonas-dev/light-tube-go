@@ -5,7 +5,13 @@ const execSync = require('child_process').execSync;
 const exec = require('child_process').exec;
 const fs = require('fs');
 
-var goProcessCode = -1
+var goProcessCode = null
+
+function killProcess() {
+  if (goProcessCode != null) {
+    goProcessCode.kill()
+  }
+}
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/web/index.html');
@@ -14,27 +20,21 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
   console.log('a user connected');
 
-  socket.on("*",function(event,data) {
-    console.log(event);
-    console.log(data);
-  });
-
   socket.on('command', function(msg) {
     console.log("command" + msg)
     var map = {
       "start": function() {
+        killProcess()
         goProcessCode = exec("./run")
         console.log("start " + goProcessCode.pid)
       },
       "build": function() {
+        killProcess()
         goProcessCode = exec("./build")
         console.log("build " + goProcessCode.pid)
       },
       "kill": function() {
-        if (goProcessCode != -1) {
-          console.log("kill " + goProcessCode.pid)
-          goProcessCode = execSync("kill " + goProcessCode.pid)
-        }
+        killProcess()
       }
     };
     map[msg]();
