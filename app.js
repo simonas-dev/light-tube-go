@@ -26,7 +26,14 @@ io.on('connection', function(socket){
     var map = {
       "start": function() {
         killProcess()
-        goProcessCode = exec("sudo ./bin/app")
+        goProcessCode = exec("sudo ./bin/app", (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+          }
+          console.log(`stdout: ${stdout}`);
+          console.log(`stderr: ${stderr}`);
+        });
         console.log("start " + goProcessCode.pid)
       },
       "build": function() {
